@@ -34,7 +34,7 @@
       "start": "2023-03-03",
       "end": "2023-03-10",
       "latest_n": "",
-      "save_path": "/Users/shiqi/Desktop/Projects/Seeking Job/Projects/",
+      "root_path": "/Users/shiqi/Desktop/Projects/Seeking Job/Projects/",
       "parent_dir": "histData",
       "auto_retry": false,
       "max_retry": 3

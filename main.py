@@ -19,7 +19,30 @@ TYPE_NAME = ['WEBPXTICK_DT.zip', 'TC.txt', 'TK_structure.dat', 'TC_structure.dat
 tc_ds_url = f"{base_url}5361/TC_structure.dat"
 tick_ds_url = f"{base_url}5361/TickData_structure.dat"
 
+"""
+A simple scraper to download historical trading data in given time range
 
+Configs
+-------
+DTYPE : int ->> range(0, 5)
+    kind of statistics to scrape
+START, END : datetime ->> between 2019-05-06 AND Today(2023-03-07)
+    target time range, can be `None` ONLY when `LATEST_N` set
+LATEST_N : int ->> range(1, 1000)
+    last n trading days, can be `None` ONLY when `START` and `END` set
+MAX_RETRY : int -> range(1, 5)
+    max retry attempts when download failed, 3 by default
+ROOT_PATH : str -> os.path.exists()
+    root path of saved scraped files, cwd by default.
+    noted the final save_path is `{ROOT_PATH}/{PARENT_DIR}`
+PARENT_DIR : str -> contain only alphas, digits, underline; AND length < 30
+    parent dir of scraped files, 'histData' by default
+AUTO_RETRY : bool -> [NO constraint]
+    whether instantly redownload failed files:
+        * True : redownload failed files as failure detected
+        * False: record failed files, await further user instruction at end of the job
+
+"""
 class Scraper:
 
     def __init__(self, config_file) -> None:
@@ -36,9 +59,10 @@ class Scraper:
         self.START = datetime.strptime(downloadArgs['start'], '%Y-%m-%d') if downloadArgs['start'] else None
         self.END = datetime.strptime(downloadArgs['end'], '%Y-%m-%d') if downloadArgs['end'] else None
         self.LATEST_N = downloadArgs['latest_n']
-        self.MAX_RETRY = downloadArgs['max_retry']
-        self.SAVE_PATH = downloadArgs['save_path']
-        self.PARENT_DIR = downloadArgs['parent_dir'] if downloadArgs['parent_dir'] else "histData"
+        self.MAX_RETRY = downloadArgs.get('max_retry', 3)
+        self.ROOT_PATH = downloadArgs.get('parent_dir', "./")
+        self.PARENT_DIR = downloadArgs.get('parent_dir', "histData")
+        self.AUTO_RETRY = downloadArgs.get('auto_retry', False)
         self.__checkInputArgs()
 
         self.batch_size = 0
@@ -97,7 +121,7 @@ class Scraper:
         fname_exp = url[len(base_url) + DELTA_LEN + 1:]
         fname_exp = fname_exp[:-DELTA_LEN] + '-' + fileId + fname_exp[-DELTA_LEN:]
         
-        dir = os.path.join(self.SAVE_PATH, self.PARENT_DIR)
+        dir = os.path.join(self.ROOT_PATH, self.PARENT_DIR)
         if not os.path.exists(dir):
             os.mkdir(dir)
 
@@ -169,6 +193,9 @@ class Scraper:
         return res_date
 
 
+    """
+    Check the validity of input arguments, as stated in the class doc
+    """
     def __checkInputArgs(self):
         pass
 
