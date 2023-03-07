@@ -53,7 +53,15 @@ Send us a **.tar.gz** or **.zip** file that contains all the relevant files that
 
 1. [INFO] 运行阶段
 
-   当前正在执行的任务，及进度
+   当前正在执行的任务，及进度。总共分为以下 2 个运行阶段：
+
+   1. **初始化阶段**
+
+      包括各种输入参数的校验、类对象的创建
+
+   2. **数据下载阶段**
+
+      接着，就可以通过这些参数发送相应的请求，下载文件。在完成后，显示 job summary. 等待用户指示是否需要重新下载未完成的文件。
 
 2. 
 
@@ -89,25 +97,27 @@ Send us a **.tar.gz** or **.zip** file that contains all the relevant files that
 
 下一步，使该程序支持参数设定，假定所有的 DS 文件均相同。
 
-1. 计算出当前的 `deltaDay`
-
 `restDay:` 经过我的观察，只有周末的数据不可用，其它时间段的数据均可用。因此，只需要取一个较早的周一，和它计算 `deltaDay`，判断取余 7 后，是否为 5/6 即可。如果是的话，直接跳过。
 
 `BASE_DAY`: 选定 1000 个交易日之前的日子为基准日期，保存它的 `deltaday`. 从而可以通过数学公式计算出任意日期的 `deltaday`. 该公式为：
 
 ```python
-days_passed = tarDay - BASE_DAY + 1
+days_passed = tarDay - BASE_DAY
 n_rest = days_passed / 7 * 2
 rem = days_passed % 7
 if (rem < 5):
 	delta_cur = delta_base + tarDay - BASE_DAY - n_rest
 else:
-  delta_cur = delta_base + tarDay - BASE_DAY - n_rest - rem + 5
+  delta_cur = delta_base + tarDay - BASE_DAY - n_rest - rem + 4
 ```
 
+但事实上，服务器中的 `delta_days` 存在异常点，并不是如理论中的那么连续、规律。经过长达 1 小时的尝试，我找到了 2 个异常点，如下:
 
+```python
+[datetime(2020, 2, 1), datetime(2020, 11, 13)]
+```
 
-
+特别地，`2022-11-13` 理论的位置发生了 404，ID 上移了 2 位至 `4768`。而 `2020-02-01` 和 `2020-11-14` 均是周六 (非交易日)，却有记录文件。
 
 > **🚩优化点1: DS 文件是否相同**
 >
