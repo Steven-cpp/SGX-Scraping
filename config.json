@@ -31,12 +31,12 @@
     },
     "download": {
       "type": 3,
-      "start": "2023-03-03",
-      "end": "2023-03-10",
+      "start": "2020-11-10",
+      "end": "2020-11-20",
       "latest_n": "",
       "root_path": "/Users/shiqi/Desktop/Projects/Seeking Job/Projects/",
       "parent_dir": "histData)(*",
-      "auto_retry": false,
+      "auto_retry": true,
       "max_retry": 3
     }
   }

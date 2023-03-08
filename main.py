@@ -11,9 +11,10 @@ import json
 
 BASE_DATE = datetime(2019, 5, 6)
 BASE_DELTA = 4366
-MAX_DELTA = 1000
+MAX_DELTA_RANGE = 1000
 DELTA_LEN = 4
 BAD_DATES = [datetime(2020, 2, 1), datetime(2020, 11, 13)]
+BAD_DELTA = 4766
 base_url = "https://links.sgx.com/1.0.0/derivatives-historical/"
 TYPE_DICT = {0: 'ALL', 1: 'HD', 2: 'TK', 3: 'TC', 4: 'DS'}
 TYPE_NAME = ['WEBPXTICK_DT.zip', 'TC.txt', 'TK_structure.dat', 'TC_structure.dat']
@@ -39,9 +40,9 @@ ROOT_PATH : str -> os.path.exists()
 PARENT_DIR : str -> os.mkdir() can succeed
     parent dir of scraped files, 'histData' by default
 AUTO_RETRY : bool -> [NO constraint]
-    whether instantly redownload failed files:
-        * True : redownload failed files as failure detected
-        * False: record failed files, await further user instruction at end of the job
+    whether automatically redownload recorded failed files:
+        * True : redownload failed files at the end of the job
+        * False: await further user instruction when the job finished
 
 """
 class Scraper:
@@ -80,17 +81,23 @@ class Scraper:
         if (self.DTYPE == 4):
             self.logger.info('DS already downloaded')
             return
-        self.batch_size = self.__date2Deltadays(self.END) + 1 - self.__date2Deltadays(self.START)
+        deltaRange = range(self.__date2Deltadays(self.START), self.__date2Deltadays(self.END) + 1)
+        self.batch_size = deltaRange[-1] - deltaRange[0] + 1
+        if (BAD_DELTA in deltaRange):
+            self.batch_size -= 1
         self.iter = 1
         self.iter_exc = 0
         if (self.DTYPE in [0, 1]):
             self.batch_size *= 2
 
-        for i in range(self.__date2Deltadays(self.START), self.__date2Deltadays(self.END) + 1):
+        for i in deltaRange:
+            if (i == BAD_DELTA):
+                continue
             tc_url = f"{base_url}{i}/{TYPE_NAME[1]}"
             tick_url = f"{base_url}{i}/{TYPE_NAME[0]}"
             if (self.DTYPE in [0, 1, 2]):
                 self.__downloadFromUrl(tick_url)
+                    
             if (self.DTYPE in [0, 1, 3]):
                 self.__downloadFromUrl(tc_url)
         
@@ -99,6 +106,9 @@ class Scraper:
 
         if len(self.excFiles) > 0:
             logging.warning('Failed files: ' + str(self.excFiles))
+            if (self.AUTO_RETRY):
+                self.__retryFailed()
+                return
             doRetry = input('Do you want to retry downloading failed files? (Y/YES do retry): ')
             if (doRetry == 'Y' or doRetry == 'YES'):
                 logging.info('User choose to retry failed files')
@@ -151,17 +161,19 @@ class Scraper:
         self.iter += 1
         return emsg
 
+
     def __retryFailed(self):
         logging.info('===== Redownload Failed Files =====')
+        n_fails = len(self.excFiles)
         for (id, url) in enumerate(self.excFileUrls):
-            logging.info(f'{id + 1}/{len(self.excFiles)}: Redownloading {self.excFiles[id]}')
+            logging.info(f'{id + 1}/{n_fails}: Redownloading {self.excFiles[id]}')
             for i in range(self.MAX_RETRY):
                 emsg = self.__downloadFromUrl(url, isRetry=True)
                 if(emsg is None):
                     logging.info(f'\t{i + 1}/{self.MAX_RETRY} attemp success')
                 else:
                     logging.info(f'\t{i + 1}/{self.MAX_RETRY} attemp failed: {emsg}')
-        # [TODO] Add Retry Job Summary
+        logging.info(f'Successfully redownloaded {n_fails - len(self.excFiles)} files; {len(self.excFiles)} files still failed')
         pass
 
 
@@ -181,16 +193,24 @@ class Scraper:
             delta_cur += 2
         return delta_cur
     
+
     def __deltadays2Date(self, days: int) -> datetime:
         # [TODO: BUG] Mapping consistency with date <-> deltaDays, especially around BAD_DATES
         n_diff = days - BASE_DELTA
         rest_days = n_diff // 5 * 2
         res_date = BASE_DATE + timedelta(days=rest_days+n_diff)
         if (res_date >= BAD_DATES[0]):
-            res_date -= timedelta(days=1)
-        if (res_date >= BAD_DATES[1]):
-            res_date -= timedelta(days=4)
-        return res_date
+            rest_days -= 1
+        if (days >= BAD_DELTA):
+            if (days == BAD_DELTA):
+                logging.error('accessed bad delta')
+            elif (days != BAD_DELTA + 1):
+                rest_days -= 2
+
+            if (n_diff % 5 in [0, 1, 2]):
+                rest_days -= 2
+
+        return BASE_DATE + timedelta(days=rest_days+n_diff)
 
 
     """
@@ -211,6 +231,11 @@ class Scraper:
                 self.END = datetime.strptime(self.END, '%Y-%m-%d')
                 if self.START >= self.END:
                     raise ValueError('START date should be earlier than END date')
+                if self.START < BASE_DATE:
+                    raise ValueError(f'START date should be after {datetime.strftime(BASE_DATE, "%Y-%m-%d")}')
+                today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                if self.END >= today:
+                    raise ValueError(f'END date should be earlier than today ({datetime.strftime(today, "%Y-%m-%d")})')
                 self.useRange = True
             else:
                 raise ValueError('time range incomplete, please specify LATEST_N or [START, END]')
@@ -231,6 +256,18 @@ class Scraper:
             logging.error(f'Invalid Configuration: {e}', exc_info=True)
             logging.info(f'Check {self.config_path} to fix this error')
             exit(-1)
+        
+    """
+    Find mapping inconsistency, and try to fix it.
+
+    0. suppose dates -> delta is safe, try to fix delta -> dates
+    1. every 50 days, show the `expected` and `output` dates
+
+
+    """    
+    def __deltaMappingTest():
+        pass
+
             
         
 
