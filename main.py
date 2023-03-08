@@ -11,6 +11,7 @@ import json
 
 BASE_DATE = datetime(2019, 5, 6)
 BASE_DELTA = 4366
+MAX_DELTA = 1000
 DELTA_LEN = 4
 BAD_DATES = [datetime(2020, 2, 1), datetime(2020, 11, 13)]
 base_url = "https://links.sgx.com/1.0.0/derivatives-historical/"
@@ -35,7 +36,7 @@ MAX_RETRY : int -> range(1, 5)
 ROOT_PATH : str -> os.path.exists()
     root path of saved scraped files, cwd by default.
     noted the final save_path is `{ROOT_PATH}/{PARENT_DIR}`
-PARENT_DIR : str -> contain only alphas, digits, underline; AND length < 30
+PARENT_DIR : str -> os.mkdir() can succeed
     parent dir of scraped files, 'histData' by default
 AUTO_RETRY : bool -> [NO constraint]
     whether instantly redownload failed files:
@@ -50,17 +51,18 @@ class Scraper:
         with open(config_file, 'r') as f:
             config = json.load(f)
         logging.config.dictConfig(config['logging'])
+        self.config_path = config_file
         self.logger = logging.getLogger(__name__)
         self.logger.info('=====   Scraper Initializing   =====')
         self.logger.info('Logging   module successfully configured')
 
         downloadArgs = config['download']
         self.DTYPE = downloadArgs['type']
-        self.START = datetime.strptime(downloadArgs['start'], '%Y-%m-%d') if downloadArgs['start'] else None
-        self.END = datetime.strptime(downloadArgs['end'], '%Y-%m-%d') if downloadArgs['end'] else None
+        self.START = downloadArgs['start']
+        self.END = downloadArgs['end']
         self.LATEST_N = downloadArgs['latest_n']
         self.MAX_RETRY = downloadArgs.get('max_retry', 3)
-        self.ROOT_PATH = downloadArgs.get('parent_dir', "./")
+        self.ROOT_PATH = downloadArgs.get('root_path', "./")
         self.PARENT_DIR = downloadArgs.get('parent_dir', "histData")
         self.AUTO_RETRY = downloadArgs.get('auto_retry', False)
         self.__checkInputArgs()
@@ -69,7 +71,8 @@ class Scraper:
         self.iter = 0
         self.excFiles= []
         self.excFileUrls = []
-        self.logger.info('Scraping  module successfully configured')
+        self.logger.info('Download  module successfully configured')
+        self.logger.info('Scraper Initialized')
 
     
     def getHistData(self):
@@ -118,12 +121,10 @@ class Scraper:
     def __downloadFromUrl(self, url, isRetry=False):
         emsg = None
         fileId = url[len(base_url): len(base_url) + DELTA_LEN]
+        tarDate = self.__deltadays2Date(int(fileId)).strftime('%Y%m%d')
         fname_exp = url[len(base_url) + DELTA_LEN + 1:]
-        fname_exp = fname_exp[:-DELTA_LEN] + '-' + fileId + fname_exp[-DELTA_LEN:]
-        
+        fname_exp = fname_exp[:-DELTA_LEN] + '-' + tarDate + fname_exp[-DELTA_LEN:]
         dir = os.path.join(self.ROOT_PATH, self.PARENT_DIR)
-        if not os.path.exists(dir):
-            os.mkdir(dir)
 
         try:
             with requests.get(url, stream=True, timeout=5) as r:
@@ -166,7 +167,6 @@ class Scraper:
 
     # Convert `date` to days in SGX Derivitive hist data
     def __date2Deltadays(self, date: datetime) -> int:
-        # [TODO: EXC] returned days could be out of range
         days_passed = (date - BASE_DATE).days
         n_rest = days_passed // 7 * 2
         rem = days_passed % 7
@@ -197,7 +197,42 @@ class Scraper:
     Check the validity of input arguments, as stated in the class doc
     """
     def __checkInputArgs(self):
-        pass
+        logging.info('checking download module configs...')
+        try:
+            if not isinstance(self.DTYPE, int) and self.DTYPE in range(0, 5):
+                raise ValueError('DTYPE should be of type `int` and within [0, 5)')
+
+            if self.LATEST_N:
+                if not (isinstance(self.LATEST_N, int) and self.LATEST_N < MAX_DELTA):
+                    raise ValueError(f'LATEST_N should be of type `int` and < {MAX_DELTA}')
+                self.useRange = False
+            elif self.START and self.END:
+                self.START = datetime.strptime(self.START, '%Y-%m-%d')
+                self.END = datetime.strptime(self.END, '%Y-%m-%d')
+                if self.START >= self.END:
+                    raise ValueError('START date should be earlier than END date')
+                self.useRange = True
+            else:
+                raise ValueError('time range incomplete, please specify LATEST_N or [START, END]')
+            
+            if not (isinstance(self.MAX_RETRY, int) and self.MAX_RETRY in range(1, 5)):
+                raise ValueError('MAX_RETRY should be of type `int` and within [1, 5)')
+            
+            if not os.path.exists(self.ROOT_PATH):
+                raise ValueError(f'ROOT_PATH {self.ROOT_PATH} not exists')
+            
+            if isinstance(self.PARENT_DIR, str):
+                dir = os.path.join(self.ROOT_PATH, self.PARENT_DIR)
+                if not os.path.exists(dir):
+                    os.mkdir(dir)
+                    logging.info(f'created new directory `{self.PARENT_DIR}` under {self.ROOT_PATH}')
+            
+        except (ValueError, OSError) as e:
+            logging.error(f'Invalid Configuration: {e}', exc_info=True)
+            logging.info(f'Check {self.config_path} to fix this error')
+            exit(-1)
+            
+        
 
 
 if __name__ == "__main__":
