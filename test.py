@@ -1,4 +1,20 @@
-import os
+
+
+import curses, time, os, sys
+from time import sleep
+
+def sp(str):
+  for letter in str:
+    sys.stdout.write(letter)
+    sys.stdout.flush()
+    time.sleep(0.5)
+    
+  print()
+
+# to use it:
+print('Start to download ', end=" ")
+sp("...")
+
 
 # def getNonTradDate(startDay):
 #     rest_day = []

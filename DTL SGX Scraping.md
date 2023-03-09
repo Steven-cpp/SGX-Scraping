@@ -1,6 +1,19 @@
 # DTL SGX Scraping
 
 这是 DTL Data Engineer 的下一阶段测试，使用 Python 在 SGX 网站上下载指定日期的历史数据。
+$$
+\min_{w,b} \frac{1}{n} \sum_{i=1}^n L(y_i, w^T x_i + b) + \lambda \|w\|^2
+$$
+
+$$
+\min_{w,b} \frac{1}{n} \sum_{i=1}^n L(y_i, w^T x_i + b) + \lambda \|w\|^2
+$$
+
+$$
+L(y_i, \hat{y}_i) = \max(0, 1 - y_i \hat{y}_i)
+$$
+
+
 
 ## I. Requirement
 
@@ -63,7 +76,13 @@ Send us a **.tar.gz** or **.zip** file that contains all the relevant files that
 
       接着，就可以通过这些参数发送相应的请求，下载文件。在完成后，显示 job summary. 等待用户指示是否需要重新下载未完成的文件。
 
-2. 
+2. [Warning] 文件下载失败
+
+   具体见 3.2
+
+3. [ERROR] config 参数错误
+
+   具体见 3.1
 
 ### 3. Exception Handling
 
