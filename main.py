@@ -1,11 +1,10 @@
-import requests
-import shutil
-from tqdm.auto import tqdm
-import os
 from requests.exceptions import RequestException
 from datetime import datetime, timedelta
-import logging
-import logging.config
+import logging, logging.config
+from tqdm.auto import tqdm
+import requests
+import shutil
+import os
 import json
 
 
@@ -14,12 +13,13 @@ BASE_DELTA = 4366
 MAX_DELTA_RANGE = 1000
 DELTA_LEN = 4
 BAD_DATES = [datetime(2020, 2, 1), datetime(2020, 11, 13)]
-BAD_DELTA = 4766
-base_url = "https://links.sgx.com/1.0.0/derivatives-historical/"
+BAD_DELTAS = [4561, 4766]
 TYPE_DICT = {0: 'ALL', 1: 'BOTH', 2: 'TICK', 3: 'TC', 4: 'DS'}
 TYPE_NAME = ['WEBPXTICK_DT.zip', 'TC.txt', 'TK_structure.dat', 'TC_structure.dat']
-tc_ds_url = f"{base_url}4182/TC_structure.dat"
-tick_ds_url = f"{base_url}4433/TickData_structure.dat"
+base_url = "https://links.sgx.com/1.0.0/derivatives-historical/"
+tick_ds_url = f"{base_url}4433/{TYPE_NAME[2]}"
+tc_ds_url = f"{base_url}4182/{TYPE_NAME[3]}"
+
 
 class Scraper:
     """
@@ -89,6 +89,8 @@ class Scraper:
         self.AUTO_RETRY = downloadArgs.get('auto_retry', False)
         self.__checkConfigArgs()
         self.logger.info('Download module successfully configured')
+        bad_delta = datetime(2020, 2, 1)
+        print(self.__date2Deltadays(bad_delta))
 
         # 3. Set member variables
         self.batch_size = 0
@@ -147,7 +149,7 @@ class Scraper:
         # 5. Then downlaod history data
         self.logger.info('downloading history data')
         for fileId in deltaRange:
-            if (fileId == BAD_DELTA):
+            if (fileId == BAD_DELTAS[1]):
                 continue
             tc_url = f"{base_url}{fileId}/{TYPE_NAME[1]}"
             tick_url = f"{base_url}{fileId}/{TYPE_NAME[0]}"
@@ -325,12 +327,12 @@ class Scraper:
         res_date = BASE_DATE + timedelta(days=rest_days+n_diff)
         if (res_date >= BAD_DATES[0]):
             rest_days -= 1
-            if (n_diff % 5 == 0 and days < BAD_DELTA):
+            if (n_diff % 5 == 0 and days < BAD_DELTAS[1]):
                 rest_days -= 2
-        if (days >= BAD_DELTA):
-            if (days == BAD_DELTA):
+        if (days >= BAD_DELTAS[1]):
+            if (days == BAD_DELTAS[1]):
                 logging.error('accessed bad delta')
-            elif (days != BAD_DELTA + 1):
+            elif (days != BAD_DELTAS[1] + 1):
                 rest_days -= 2
 
             if (n_diff % 5 in [0, 1, 2]):
@@ -343,7 +345,7 @@ if __name__ == "__main__":
     start = datetime(2023, 3, 3)
     end = datetime(2023, 3, 10)
     s = Scraper('config.json')
-    s.getHistData()
+    # s.getHistData()
     
     
     
