@@ -6,6 +6,7 @@ import requests
 import shutil
 import os
 import json
+import argparse
 
 
 BASE_DATE = datetime(2019, 5, 6)
@@ -29,7 +30,7 @@ class Scraper:
     -------
     DTYPE : int ->> range(0, 5)
         kind of statistics to scrape
-    START, END : datetime ->> between 2019-05-06 AND Today
+    START, END : datetime ->> between `BASE_DATE` AND Today
         target time range, can be `None` ONLY when `LATEST_N` set
     LATEST_N : int ->> range(1, 1000)
         last n trading days, can be `None` ONLY when `START` and `END` set
@@ -89,8 +90,6 @@ class Scraper:
         self.AUTO_RETRY = downloadArgs.get('auto_retry', False)
         self.__checkConfigArgs()
         self.logger.info('Download module successfully configured')
-        bad_delta = datetime(2020, 2, 1)
-        print(self.__date2Deltadays(bad_delta))
 
         # 3. Set member variables
         self.batch_size = 0
@@ -109,7 +108,7 @@ class Scraper:
         deltaRange = range(self.__date2Deltadays(self.START), self.__date2Deltadays(self.END) + 1)
         self.batch_size = deltaRange[-1] - deltaRange[0] + 1
         # 1.1 Avoid requesting `BAD_DELTA`, which does not exist on server
-        if (BAD_DELTA in deltaRange):
+        if (BAD_DELTAS[1] in deltaRange):
             self.batch_size -= 1
         # 1.2 `DTYPE`` 0 & 1 asks to download both Tick and TC files
         if (self.DTYPE in [0, 1]):
@@ -342,9 +341,13 @@ class Scraper:
 
 
 if __name__ == "__main__":
-    start = datetime(2023, 3, 3)
-    end = datetime(2023, 3, 10)
-    s = Scraper('config.json')
+    parser = argparse.ArgumentParser(description="Scraper config file")
+    parser.add_argument("configPath", help="Path of json file to config scraper")
+    args = parser.parse_args()
+
+    print("filePath:", args.configPath)
+    
+    s = Scraper(args.configPath)
     # s.getHistData()
     
     
