@@ -100,22 +100,32 @@ class Scraper:
 
     
     def getHistData(self):
+        """
+        Download required files specified by config file
+        """
+        # 1.  Calculate total number of files
         deltaRange = range(self.__date2Deltadays(self.START), self.__date2Deltadays(self.END) + 1)
         self.batch_size = deltaRange[-1] - deltaRange[0] + 1
+        # 1.1 Avoid requesting `BAD_DELTA`, which does not exist on server
         if (BAD_DELTA in deltaRange):
             self.batch_size -= 1
-        self.iter = 1
-        self.iter_exc = 0
+        # 1.2 `DTYPE`` 0 & 1 asks to download both Tick and TC files
         if (self.DTYPE in [0, 1]):
             self.batch_size *= 2
-        
-        # Structural Data
+        # 1.3 For data structure file requests, fileNums add 2
         if (self.DTYPE == 0):
             self.batch_size += 2
         elif (self.DTYPE == 4):
             self.batch_size = 2
             deltaRange = []        
 
+        # 2. Initialize tracking variables
+        self.iter = 1
+        self.iter_exc = 0
+        self.excFiles= []
+        self.excFileUrls = []
+
+        # 3. Show job overview, await user confirm to start job
         self.logger.info('=====   Download History Data  =====')
         self.logger.info('Job Overview:')
         dateRangeStr = f"from {datetime.strftime(self.START, '%Y-%m-%d')} to {datetime.strftime(self.END, '%Y-%m-%d')}"
@@ -128,11 +138,13 @@ class Scraper:
             self.logger.info('exit: User chooses NOT to start download job')
             return
 
+        # 4. Download structural data first, if needed
         self.logger.info('downloading structural data')
         if (self.DTYPE in [0, 4]):
             self.__downloadFromUrl(tc_ds_url)
             self.__downloadFromUrl(tick_ds_url)
 
+        # 5. Then downlaod history data
         self.logger.info('downloading history data')
         for fileId in deltaRange:
             if (fileId == BAD_DELTA):
@@ -145,9 +157,9 @@ class Scraper:
             if (self.DTYPE in [0, 1, 3]):
                 self.__downloadFromUrl(tc_url)
         
+        # 6. Show job result summary, await users confirm to retry failed requests, if not set `AUTO_RETRY`
         n_success = self.batch_size - len(self.excFiles)
         logging.info(f'Successfully downloaded {n_success} files; {len(self.excFiles)} files failed')
-
         if len(self.excFiles) > 0:
             logging.warning('Failed files: ' + str(self.excFiles))
             if (self.AUTO_RETRY):
@@ -280,15 +292,15 @@ class Scraper:
         logging.info(f'Successfully redownloaded {n_fails - len(self.excFiles)} files; {len(self.excFiles)} files still failed')
 
 
-    """
-    Convert `date` to days in SGX Derivitive hist data
-
-    Noted
-    -----
-    It converts weekend to last Friday. So when weekend is set as start date, it is 
-    implicitly perceived as last friday.
-    """
     def __date2Deltadays(self, date: datetime) -> int:
+        """
+        Convert `date` to days(fileId) in SGX Derivitive hist data
+
+        Noted
+        -----
+        It converts weekend to last Friday. So when weekend is set as start date, it is 
+        implicitly perceived as last friday.
+        """
         days_passed = (date - BASE_DATE).days
         n_rest = days_passed // 7 * 2
         rem = days_passed % 7
@@ -305,6 +317,9 @@ class Scraper:
     
     
     def __deltadays2Date(self, days: int) -> datetime:
+        """
+        Reversed operation of `__date2Deltadays()`, parse `days` to date
+        """
         n_diff = days - BASE_DELTA
         rest_days = n_diff // 5 * 2
         res_date = BASE_DATE + timedelta(days=rest_days+n_diff)
@@ -322,8 +337,6 @@ class Scraper:
                 rest_days -= 2
 
         return BASE_DATE + timedelta(days=rest_days+n_diff)
-
-           
 
 
 if __name__ == "__main__":
