@@ -37,7 +37,7 @@ For example, if I want to download all the files (4 data types) from `2022-12-15
 }
 ```
 
-With other default parameters in place, the program will run smoothly as shown below:
+Noted that `TYPE_DICT = {0: 'ALL', 1: 'BOTH', 2: 'TICK', 3: 'TC', 4: 'DS'}`. With other default parameters in place, the program will run smoothly as shown below:
 
 ```python
 10:14:06 - __main__ - INFO - =====   Scraper Initializing   =====
