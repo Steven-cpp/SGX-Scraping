@@ -360,12 +360,12 @@ class Scraper:
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Scraper config file")
-    # parser.add_argument("configPath", help="Path of json file to config scraper")
-    # args = parser.parse_args()
-    # s = Scraper(args.configPath)
+    parser = argparse.ArgumentParser(description="Scraper config file")
+    parser.add_argument("configPath", help="Path of json file to config scraper")
+    args = parser.parse_args()
+    s = Scraper(args.configPath)
 
-    s = Scraper('config.json')
+    # s = Scraper('config.json')
     s.getHistData()
     
     
