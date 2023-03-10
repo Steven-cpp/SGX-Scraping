@@ -1,23 +1,23 @@
-# DTL SGX Scraping
+# SGX Scraping Doc
 
-这是 DTL Data Engineer 的下一阶段测试，使用 Python 在 SGX 网站上下载指定日期的历史数据。
+This is the next phase of screening process for the DTL Data Engineer Intern, using Python to download historical data on the SGX website for a specified date range.
 
 ## I. Requirement
 
 Design a job to download the following files daily from the above website:
 
-1. WEBPXTICK_DT-*.zip
-2. TickData_structure.dat
-3. TC_*.txt
-4. TC_structure.dat
+1. `WEBPXTICK_DT-*.zip`
+2. `TickData_structure.dat`
+3. `TC_*.txt`
+4. `TC_structure.dat`
 
 As is shown in the following snapshot, each file corresponds to each drop down options in *Time and Sales Historical Data*.
 
 ![image-20230306093101769](https://raw.githubusercontent.com/Steven-cpp/myPhotoSet/main/image-20230306093101769.png)
 
-Send us a **.tar.gz** or **.zip** file that contains all the relevant files that you would like to submit.
+Send us a **.tar.gz** or **.zip** file that contains all the relevant files that you would like to **submit before 11th March 11.59 pm**.
 
-由于需求文档的说明非常 general，自由度非常大，因此我结合实际的使用需求，将程序的规约进一步的细化。
+As the requirements document is very general and free, I have further refined the program's statute to take into account the actual requirements of use.
 
 ### 1. Input
 
@@ -55,7 +55,7 @@ Send us a **.tar.gz** or **.zip** file that contains all the relevant files that
 
 该程序需要使用 Python 自带的 Logging module 输出程序运行时的状态信息，包括：
 
-1. [INFO] 运行阶段
+1. **[INFO] 运行阶段**
 
    当前正在执行的任务，及进度。总共分为以下 3 个运行阶段：
 
@@ -73,13 +73,13 @@ Send us a **.tar.gz** or **.zip** file that contains all the relevant files that
 
       如果有文件下载异常，并且用户指定重新下载，则会进入该阶段。重新下载记录下来的异常文件。
 
-2. [Warning] 文件下载失败
+2. **[Warning] 文件下载失败**
 
-   具体见 3.2
+   详见后文 Error Recovery
 
-3. [ERROR] config 参数错误
+3. **[ERROR] config 参数错误**
 
-   具体见 3.1
+   详见后文 Error Recovery
 
 ### 3. Exception Handling
 
@@ -95,9 +95,7 @@ Send us a **.tar.gz** or **.zip** file that contains all the relevant files that
 
 ## II. Program Design
 
-遵循软件工程的一般流程，在确认需求之后，就可以对软件进行顶层设计了。
-
-不妨先实现该软件的核心功能，下载指定日期范围内的文件，并显示进度条。在这一核心功能的基础上，再逐步扩充日志输出、参数设定、异常处理这些模块。
+遵循软件工程的一般流程，在确认需求之后，就可以对软件进行顶层设计了。不妨先实现该软件的核心功能，下载指定日期范围内的文件，并显示进度条。在这一核心功能的基础上，再逐步扩充日志输出、参数设定、异常处理这些模块。
 
 ### 1. Core Module
 
@@ -166,7 +164,7 @@ def date2Deltadays(date: datetime) -> int:
 
 This can be implemented by simply importing `logging` module, and set up `logger` instance within the class from user specified config file. By default, the level of the file handler is set to `DEBUG` and the level of the console handler is set `INFO`, which means only levels >= `INFO` will show up on the console, while levels  >= `DEBUG` will be written to the log file.
 
-A typical log file looks like the  following (with the year-month-date removed):
+A typical log file looks like the  following (with the year-month-date removed), which consists of three stages, as is outlined in I.2:
 
 ```python
 10:14:06 - __main__ - INFO - =====   Scraper Initializing   =====
@@ -190,8 +188,6 @@ A typical log file looks like the  following (with the year-month-date removed):
 10:14:07 - root - INFO - Successfully downloaded 22 files; 0 files failed
 10:14:07 - root - INFO - Done! Complete downloading history data.
 ```
-
-It consists of three stages, as is outlined in I.2
 
 ### 3. Error Recovery
 
