@@ -31,9 +31,9 @@
     },
     "download": {
       "type": 0,
-      "start": "2021-12-05",
+      "start": "2022-12-15",
       "end": "2022-12-31",
-      "latest_n": 10,
+      "latest_n": "",
       "root_path": "/Users/shiqi/Desktop/Projects/Seeking Job/Projects/",
       "parent_dir": "histData",
       "auto_retry": false,

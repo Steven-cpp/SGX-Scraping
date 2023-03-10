@@ -16,10 +16,10 @@ DELTA_LEN = 4
 BAD_DATES = [datetime(2020, 2, 1), datetime(2020, 11, 13)]
 BAD_DELTAS = [4561, 4766]
 TYPE_DICT = {0: 'ALL', 1: 'BOTH', 2: 'TICK', 3: 'TC', 4: 'DS'}
-TYPE_NAME = ['WEBPXTICK_DT.zip', 'TC.txt', 'TK_structure.dat', 'TC_structure.dat']
+TYPE_NAME = ['WEBPXTICK_DT.zip', 'TC.txt', 'TickData_structure.dat', 'TC_structure.dat']
 base_url = "https://links.sgx.com/1.0.0/derivatives-historical/"
-tick_ds_url = f"{base_url}4433/{TYPE_NAME[2]}"
-tc_ds_url = f"{base_url}4182/{TYPE_NAME[3]}"
+tick_ds_url = f"{base_url}4182/{TYPE_NAME[2]}"
+tc_ds_url = f"{base_url}4433/{TYPE_NAME[3]}"
 
 
 class Scraper:
@@ -174,7 +174,7 @@ class Scraper:
                 logging.info('User choose NOT to retry failed files')
         
         logging.info('Done! Complete downloading history data.')
-        
+
         
 
     def __checkConfigArgs(self):
@@ -243,8 +243,17 @@ class Scraper:
         fileId = url[len(base_url): len(base_url) + DELTA_LEN]
         tarDate = self.__deltadays2Date(int(fileId)).strftime('%Y%m%d')
         fname_exp = url[len(base_url) + DELTA_LEN + 1:]
-        fname_exp = fname_exp[:-DELTA_LEN] + '-' + tarDate + fname_exp[-DELTA_LEN:]
+        if url[-3:] == TYPE_NAME[0][-3:]:
+            fname_exp = fname_exp[:-DELTA_LEN] + '-' + tarDate + fname_exp[-DELTA_LEN:]
+        elif url[-3:] == TYPE_NAME[1][-3:]:
+            fname_exp = fname_exp[:-DELTA_LEN] + '_' + tarDate + fname_exp[-DELTA_LEN:]
+
         dir = os.path.join(self.ROOT_PATH, self.PARENT_DIR)
+
+        if os.path.exists(os.path.join(dir, fname_exp)):
+            self.logger.info(f'{self.iter}/{self.batch_size}: {fname_exp} already downloaded')
+            self.iter += 1
+            return emsg
 
         try:
             with requests.get(url, stream=True, timeout=5) as r:
@@ -253,7 +262,7 @@ class Scraper:
                 if (r.headers.get('Content-Disposition') is None):
                     raise RequestException('404, requested file NOT FOUND')
                 _, fname = r.headers['Content-Disposition'].split(';')
-                fname = fname.replace('filename=', '').strip('"')
+                fname = fname.replace('filename=', '').strip()
 
                 # implement progress bar via tqdm
                 with tqdm.wrapattr(r.raw, "read", total=size_expected, desc="")as raw:    
@@ -291,6 +300,7 @@ class Scraper:
             del self.excFiles[id - cnt]
             del self.excFileUrls[id - cnt]
         logging.info(f'Successfully redownloaded {n_fails - len(self.excFiles)} files; {len(self.excFiles)} files still failed')
+        
 
 
     def __date2Deltadays(self, date: datetime) -> int:
@@ -344,11 +354,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scraper config file")
     parser.add_argument("configPath", help="Path of json file to config scraper")
     args = parser.parse_args()
-
-    print("filePath:", args.configPath)
-    
     s = Scraper(args.configPath)
-    # s.getHistData()
+
+    # s = Scraper('config.json')
+    s.getHistData()
     
     
     
