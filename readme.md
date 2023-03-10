@@ -1,4 +1,4 @@
-# SGX Scraping
+# SGX Scraper
 
 This is my mini-project to download time and sales historical data on the [SGX website](https://www.sgx.com/research-education/derivatives) within a specified date range. It can download the following files for the **past 1000 market days** (which is from `2019-05-06` till *last market day*\*):
 
