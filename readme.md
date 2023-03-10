@@ -27,7 +27,7 @@ cd SGX-Scraping
 python main.py config.json
 ```
 
-For example, if I want to download all the files (4 data types) from `2022-12-15` to `2022-12-31`, then I just need to specify the following parameters in the `config.json`:
+For example, if I want to download all the files (4 data types) from `2023-02-04` to `2023-03-09`, then I just need to specify the following parameters in the `config.json`:
 
 ```json
 "download": {
