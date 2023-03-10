@@ -1,11 +1,17 @@
 # SGX Scraping
 
-This is my mini-project to download time and sales historical data on the [SGX website](https://www.sgx.com/research-education/derivatives) within a specified date range. It can download the following files for the **past 1000 market days** (which is from `2019-05-06` till now):
+This is my mini-project to download time and sales historical data on the [SGX website](https://www.sgx.com/research-education/derivatives) within a specified date range. It can download the following files for the **past 1000 market days** (which is from `2019-05-06` till *last market day*\*):
 
 1. `WEBPXTICK_DT-*.zip`
 2. `TickData_structure.dat`
 3. `TC_*.txt`
 4. `TC_structure.dat`
+
+> 🔍 **Why *last market day*?**
+>
+> On March 8th and 9th, I monitored the availability of the corresponding data file and noticed that it was inaccessible from 4:30 pm until 8:00 am the following day, when it was finally available on the server. 
+>
+> So, I conclude that the data file on date *D*, can only be available on around *(D + 1) 8 am*.
 
 ## Features
 
