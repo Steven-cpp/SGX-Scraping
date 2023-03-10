@@ -203,34 +203,23 @@ While download errors are classified as `WARNING`, since in most cases, they are
 
 ### 4. Optimization
 
+To further enhance the user experience and program efficiency, I have come up with three new features to add to this program:
 
+1. **Latest N Days**
 
+   I have implemented a feature that allows users to specify a time range using the 'latest_n' day format. This feature makes it easier for users to retrieve data from specific time periods without having to manually sift through the data themselves. With this feature, users can simply specify the number of days they want to retrieve data from, and the program will automatically retrieve the relevant data.
 
+2. **Avoid DS File Redundancy**
 
-> **🚩优化点1: DS 文件是否相同**
->
-> - 如果相同，在程序开跑时，一次性请求 DS 文件，然后忽略用户的请求，并给予提示；
-> - 如果不同，需要分出相同的时间区间，将不同结构的数据文件放在不同的文件夹中。以方便后期的处理和分析。
->
-> -> 可以先通过以 50 天为间隔进行遍历，两两比较文件内容是否相同。如果完全相同，再在每个 50 天的间隔内，随机抽取 10 天进行比较。如果仍完全相同，则基本可以确定所有的 DS 文件均相同。
+   After comparing data structure (DS) files on 20 different days on the server, I discovered an interesting fact: they are all the same. And the downloaded DS file has no date suffix. As a result, I established that DS files on different dates are the same.
 
+   Based on this insight, I optimized DS file downloads by downloading only one pair of DS files in the beginning, independent of the time range. This feature not only saves time and bandwidth by avoiding redundant attempts, but it also ensures that users are always getting the most up-to-date version of the data.
 
+3. **File Exsistence Check**
 
+   Finally, I added a file existence check feature that prevents the program from attempting to download a file that already exists. This feature helps to eliminate duplicate files and saves time by avoiding unnecessary downloads.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+With these three features, this program might be more efficient and user-friendly.
 
 
 
