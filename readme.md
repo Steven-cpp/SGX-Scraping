@@ -32,8 +32,8 @@ For example, if I want to download all the files (4 data types) from `2022-12-15
 ```json
 "download": {
   "type": 0,
-  "start": "2022-12-15",
-  "end": "2022-12-31"
+  "start": "2023-02-24",
+  "end": "2023-03-09"
 }
 ```
 
