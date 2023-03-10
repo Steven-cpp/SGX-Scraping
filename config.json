@@ -34,10 +34,10 @@
       "start": "",
       "end": "",
       "latest_n": 2,
-      "root_path": "/Users/shiqi/Desktop/Projects/Seeking Job/Projects/",
+      "root_path": null,
       "parent_dir": "histData",
       "auto_retry": false,
-      "max_retry": 3
+      "max_retry": null
     }
   }
   

@@ -210,17 +210,26 @@ class Scraper:
             else:
                 raise ValueError('time range incomplete, please specify LATEST_N or [START, END]')
             
-            if not (isinstance(self.MAX_RETRY, int) and self.MAX_RETRY in range(1, 5)):
+            if not self.MAX_RETRY:
+                self.MAX_RETRY = 3
+            elif not (isinstance(self.MAX_RETRY, int) and self.MAX_RETRY in range(1, 5)):
                 raise ValueError('MAX_RETRY should be of type `int` and within [1, 5)')
             
-            if not os.path.exists(self.ROOT_PATH):
+            if not self.ROOT_PATH:
+                self.ROOT_PATH = "./"
+            elif not os.path.exists(self.ROOT_PATH):
                 raise ValueError(f'ROOT_PATH {self.ROOT_PATH} not exists')
             
-            if isinstance(self.PARENT_DIR, str):
+            if not self.PARENT_DIR:
+                self.PARENT_DIR = "histData"
+            elif isinstance(self.PARENT_DIR, str):
                 dir = os.path.join(self.ROOT_PATH, self.PARENT_DIR)
                 if not os.path.exists(dir):
                     os.mkdir(dir)
                     logging.info(f'created new directory `{self.PARENT_DIR}` under {self.ROOT_PATH}')
+            
+            if not(isinstance(self.AUTO_RETRY, bool)):
+                raise ValueError(f'self.AUTO_RETRY {self.AUTO_RETRY} should be of type `bool`')
             
         except (ValueError, OSError) as e:
             logging.error(f'Invalid Configuration: {e}', exc_info=True)
@@ -351,12 +360,12 @@ class Scraper:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Scraper config file")
-    parser.add_argument("configPath", help="Path of json file to config scraper")
-    args = parser.parse_args()
-    s = Scraper(args.configPath)
+    # parser = argparse.ArgumentParser(description="Scraper config file")
+    # parser.add_argument("configPath", help="Path of json file to config scraper")
+    # args = parser.parse_args()
+    # s = Scraper(args.configPath)
 
-    # s = Scraper('config.json')
+    s = Scraper('config.json')
     s.getHistData()
     
     
