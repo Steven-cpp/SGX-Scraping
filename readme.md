@@ -11,7 +11,7 @@ This is my mini-project to download time and sales historical data on the [SGX w
 >
 > On March 8th and 9th, I monitored the availability of the corresponding data file and noticed that it was inaccessible from 4:30 pm until 8:00 am the following day, when it was finally available on the server. 
 >
-> So, I conclude that the data file on date *D*, can only be available on around *(D + 1) 8 am*.
+> So, I conclude that the data file on date *D*, can only be available on around *(D + 1) 8:30 am*.
 
 ## Features
 

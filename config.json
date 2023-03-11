@@ -30,10 +30,10 @@
       }
     },
     "download": {
-      "type": 0,
+      "type": "",
       "start": "",
       "end": "",
-      "latest_n": 2,
+      "latest_n": "",
       "root_path": null,
       "parent_dir": "histData",
       "auto_retry": false,
